@@ -31,42 +31,42 @@ app.use((req, res) => {
 
 // Função assíncrona para inicialização
 
-async function init() {  
+async function isAdminExists() {
     const adminEmail = "admin@example.com";
-    const adminPassword = "admin123"; 
-    try {
-        const existingAdmin =  await prisma.user.findFirst({
-            where: {isAdmin: true},
-        });
-
-        if (!existingAdmin) {
-            const salt = await bcrypt.genSalt(10);
-            const passwordHash = await bcrypt.hash(adminPassword, salt);
-
-            await prisma.user.create({
-                data: {
-                  firstName: "Admin",
-                  lastName: "User",
-                  email: adminEmail,
-                  passwordHash,
-                  isAdmin: true,
-                },
-              });
-
-              console.log(`✅ Admin user created: ${adminEmail}`);
-        } else{
-            console.log("✅ An admin user already exists.");
-        }
-    } catch (error) {
-        console.error("Errot to initialize:", error);
-        process.exit(1);
+    const adminPassword = "admin321";
+  
+    const existingAdmin = await prisma.user.findFirst({
+      where: { isAdmin: true },
+    });
+  
+    if (!existingAdmin) {
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(adminPassword, salt);
+  
+      await prisma.user.create({
+        data: {
+          firstName: "Admin",
+          lastName: "User",
+          email: adminEmail,
+          passwordHash,
+          isAdmin: true,
+        },
+      });
+  
+      console.log(`✅ Admin user created: ${adminEmail}`);
+    } else {
+      console.log("✅ An admin user already exists.");
     }
-}
-
-init()
+  }
+  
+  // Run this function when the server starts
+  isAdminExists()
+    .catch((error) => {
+      console.error("❌ Error ensuring admin user:", error);
+    });
 
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });
 
