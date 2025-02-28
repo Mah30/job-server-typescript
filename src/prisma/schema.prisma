@@ -12,3 +12,68 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id            String      @id @default(uuid())
+  firstName     String
+  lastName      String
+  email         String   @unique
+  passwordHash  String
+  jobs          Job[]
+  isAdmin       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt 
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  website   String?
+  location  String?
+  jobs      Job[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+
+model Job {
+  id          String   @id @default(uuid()) 
+  title       String
+  status      JobStatus @default(APPLIED)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  notes       Note[]
+  attachments Attachment[]
+  appliedDate DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, companyId]) // Evita duplicacao de aplicacao para o mesmo usuário e companhia      // Testar isso depois
+
+}
+
+model Note {
+  id        String   @id @default(uuid()) 
+  content   String
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Attachment {
+  id        String   @id @default(uuid()) 
+  url       String
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+enum JobStatus {
+  TOAPLY
+  APPLIED
+  INTERVIEW
+  REJECTED
+}
