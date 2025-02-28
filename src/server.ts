@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import prisma from "./db";
+import bcrypt from "bcrypt";
 
 
 
@@ -28,34 +29,44 @@ app.use((req, res) => {
 });
 
 
-async function isAdminExists(params:string) {   
+// Função assíncrona para inicialização
+
+async function init() {  
     const adminEmail = "admin@example.com";
-    const adminPassword = "admin321";
+    const adminPassword = "admin123"; 
+    try {
+        const existingAdmin =  await prisma.user.findFirst({
+            where: {isAdmin: true},
+        });
+
+        if (!existingAdmin) {
+            const salt = await bcrypt.genSalt(10);
+            const passwordHash = await bcrypt.hash(adminPassword, salt);
+
+            await prisma.user.create({
+                data: {
+                  firstName: "Admin",
+                  lastName: "User",
+                  email: adminEmail,
+                  passwordHash,
+                  isAdmin: true,
+                },
+              });
+
+              console.log(`✅ Admin user created: ${adminEmail}`);
+        } else{
+            console.log("✅ An admin user already exists.");
+        }
+    } catch (error) {
+        console.error("Errot to initialize:", error);
+        process.exit(1);
+    }
 }
 
-const existingAdmin = await prisma.user.findFirst({
-    where: {isAdmin: true},
-});
-
-/* if (!existingAdmin) {
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(adminPassword, salt);
-    
-} */
-
-
-
-
-
-
-
-
-
-
-
+init()
 
 
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server is running on port http://localhost:${PORT}`);
 });
 
